@@ -1,0 +1,43 @@
+name: Metrics
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/metrics.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+      # The point of this card is the numbers the hosted stats services cannot
+      # reach: it runs with a PAT of its own, so private repositories count.
+      # Public-only tooling reports ~125 commits and 0.9 MB of code; with the
+      # private work included it is 355 contributions and 2.8 MB.
+      - name: Stats including private repositories
+        uses: lowlighter/metrics@v3.34
+        with:
+          filename: assets/metrics-stats.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          user: SmesiteJl
+          base: ""
+          repositories_affiliations: owner
+          config_display: large
+          config_timezone: Europe/Moscow
+          plugin_lines: yes
+          plugin_lines_sections: base
+          plugin_languages: yes
+          plugin_languages_limit: 6
+          plugin_languages_threshold: 1%
+          plugin_languages_sections: most-used
+          plugin_languages_details: bytes-size, percentage
+          extras_css: |
+            svg { background: #1e1e2e; color: #cdd6f4; }
+            h2 { color: #cba6f7 !important; }
+            .field, text, span, tspan { color: #cdd6f4 !important; }
+            a { color: #89b4fa !important; }
