@@ -29,6 +29,8 @@ jobs:
           repositories_affiliations: owner
           config_display: large
           config_timezone: Europe/Moscow
+          retries_output_action: 5
+          retries_delay_output_action: 30
           plugin_lines: yes
           plugin_lines_sections: history
           plugin_lines_skipped: SmesiteJl/free-sked, SmesiteJl/SmesiteJl
@@ -43,3 +45,19 @@ jobs:
             h2 { color: #cba6f7 !important; }
             .field, text, span, tspan { color: #cdd6f4 !important; }
             a { color: #89b4fa !important; }
+            /* Diff history is drawn with GitHub's green/red; a CSS fill beats
+               the presentation attribute, so the palette wins. */
+            [fill="rgb(63, 185, 80)"] { fill: #a6e3a1 !important; }
+            [fill="rgb(218, 54, 51)"] { fill: #f38ba8 !important; }
+            [fill="#ebedf0"] { fill: #313244 !important; }
+            [fill="#9be9a8"] { fill: #45566e !important; }
+            [fill="#40c463"] { fill: #74c7ec !important; }
+            [fill="#30a14e"] { fill: #89b4fa !important; }
+            [fill="#216e39"] { fill: #cba6f7 !important; }
+          # The header is only enabled so the base GraphQL query runs; two of its
+          # rows say nothing worth saying. Removing the nodes (rather than hiding
+          # them) lets metrics measure the real height when it rasterises.
+          extras_js: |
+            document.querySelectorAll(".field").forEach(f => {
+              if (/Followed by|Joined GitHub/.test(f.textContent)) f.remove()
+            })
