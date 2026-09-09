@@ -1,0 +1,37 @@
+name: Snake
+
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/snake.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  snake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate the snake
+        uses: Platane/snk@v3.5.0
+        id: snake
+        with:
+          github_user_name: SmesiteJl
+          # Catppuccin Mocha: surface0 for empty days, then a sapphire → mauve
+          # ramp for the four contribution levels. The snake itself is pink so
+          # it stays legible against every cell colour.
+          outputs: |
+            dist/snake.svg?palette=github-dark&color_snake=#f5c2e7&color_dots=#313244,#45566e,#74c7ec,#89b4fa,#cba6f7
+
+      # Published to a separate branch so the generated artefact never shows up
+      # in main's history or diffs.
+      - name: Push to the output branch
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

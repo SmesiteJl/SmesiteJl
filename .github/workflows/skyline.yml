@@ -1,0 +1,61 @@
+name: Skyline
+
+on:
+  schedule:
+    # Monthly. The GIF is a binary blob, so refreshing it on every push would
+    # grow the repository history far faster than the picture actually changes.
+    - cron: "12 6 1 * *"
+  workflow_dispatch:
+    inputs:
+      commit_stl:
+        description: "Also commit the regenerated STL (~29 MB — yearly at most)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  skyline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install renderer dependencies
+        run: pip install --quiet numpy pillow
+
+      # gh-skyline reads the contribution graph through the GraphQL API. The
+      # built-in GITHUB_TOKEN only sees public contributions; swap it for a PAT
+      # with read:user if the private ones should count too.
+      - name: Generate the STL
+        env:
+          GH_TOKEN: ${{ secrets.METRICS_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          gh extension install github/gh-skyline
+          gh skyline --user "${{ github.repository_owner }}" --full \
+            --output assets/skyline-full.stl
+
+      - name: Render the animation
+        run: |
+          python scripts/render_skyline.py assets/skyline-full.stl \
+            --out assets/skyline.gif \
+            --frames 28 --sweep 52 --width 800 --height 420 --ss 3 --duration 100
+
+      - name: Commit
+        env:
+          COMMIT_STL: ${{ github.event.inputs.commit_stl }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/skyline.gif
+          if [ "$COMMIT_STL" = "true" ]; then
+            git add assets/skyline-full.stl
+          else
+            git checkout -- assets/skyline-full.stl 2>/dev/null || true
+          fi
+          git diff --staged --quiet || git commit -m "chore: refresh contribution skyline"
+          git push

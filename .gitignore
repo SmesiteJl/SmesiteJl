@@ -1,0 +1,17 @@
+# Tooling scratch
+ruvector.db
+.memory/
+_preview.html
+_m.html
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Claude Code local settings
+.claude/
